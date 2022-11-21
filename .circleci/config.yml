@@ -30,13 +30,11 @@ jobs:
       - checkout
       - aws-cli/install
       - aws-oidc-setup:
-          aws-role-arn: arn:aws:iam::755060452786:role/oidc-role
+          aws-role-arn: "arn:aws:iam::755060452786:role/oidc-role"
       - run:
           name: Test AWS connection
-          command: |
-            aws s3 ls
-            echo $AWS_ACCESS_KEY_ID
-            echo $AWS_SESSION_TOKEN
+          command: aws s3 ls
+
 
 workflows:
   build_and_deploy:
