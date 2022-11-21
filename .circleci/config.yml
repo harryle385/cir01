@@ -14,7 +14,7 @@ commands:
       - run:
           name: Get short-term credentials
           command: |
-            STS=($(aws sts assume-role-with-web-identity --role-arn $ROLE_ARN --role-session-name "${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}" --web-identity-token "${CIRCLE_OIDC_TOKEN}" --duration-seconds 900 --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text))
+            STS=($(aws sts assume-role-with-web-identity --role-arn arn:aws:iam::755060452786:role/oidc-role --role-session-name "${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}" --web-identity-token "${CIRCLE_OIDC_TOKEN}" --duration-seconds 900 --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text))
             echo "export AWS_ACCESS_KEY_ID=${STS[0]}" >> $BASH_ENV
             echo "export AWS_SECRET_ACCESS_KEY=${STS[1]}" >> $BASH_ENV
             echo "export AWS_SESSION_TOKEN=${STS[2]}" >> $BASH_ENV
@@ -30,7 +30,7 @@ jobs:
       - checkout
       - aws-cli/install
       - aws-oidc-setup:
-          aws-role-arn: $ROLE_ARN
+          aws-role-arn: arn:aws:iam::755060452786:role/oidc-role
       - run:
           name: Test AWS connection
           command: |
