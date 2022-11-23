@@ -29,6 +29,9 @@
   
     
       - &step_set_environment
+        parameters:
+          aws-role-arn:
+            type: string
         run:
           name: Set Environment
           shell: /bin/bash -eo pipefail
@@ -74,6 +77,7 @@
           - checkout
           - *step_setup_remote_docker
           - *step_install_deps
-          - *step_set_environment
+          - *step_set_environment:
+            aws-role-arn: $TEST_ARN_ROLE
           - *step_deploy
     
