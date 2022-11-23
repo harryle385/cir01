@@ -18,10 +18,10 @@
           name: Install Dependencies
             # curl -o /usr/local/bin/aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.14.6/2019-08-22/bin/linux/amd64/aws-iam-authenticator
             # chmod u+x kubectl && mv kubectl /bin/kubectl
+            # chmod 0755 /usr/local/bin/aws-iam-authenticator
           command: |
             apk add --update bash curl docker git gnupg python3 py-pip
 
-            chmod 0755 /usr/local/bin/aws-iam-authenticator
             python3 -mpip install awscli
             curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.22.3/bin/linux/amd64/kubectl
 
