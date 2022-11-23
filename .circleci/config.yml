@@ -28,7 +28,7 @@
   
     
       - &step_set_environment
-        - run:
+        run:
           name: Set Environment
           shell: /bin/bash -eo pipefail
           command: |
@@ -43,9 +43,13 @@
               echo 'Unknown Branch' >&2
               exit 1
             fi
-        - run: 
-            name: Verify AWS credentials
-            command: aws sts get-caller-identity
+
+      - &step_verify
+        run:
+          name: Verify AWS credentials
+          shell: /bin/bash -eo pipefail
+          command: aws sts get-caller-identity
+
       - &step_deploy
         run:
           name: Deploy
@@ -76,5 +80,6 @@
           - *step_setup_remote_docker
           - *step_install_deps
           - *step_set_environment
+          - *step_verify
           - *step_deploy
     
