@@ -38,7 +38,7 @@
           command: |
             if [ "${CIRCLE_BRANCH}" == "test" ]; then
               export ENV=test
-              mkdir -r /root/project/.circleci/
+              mkdir -p /root/project/.circleci/
               touch kubeconfig-test
               echo 'export ENV=test' >> $BASH_ENV
               echo "export KUBECONFIG=/root/project/.circleci/kubeconfig-test" >> $BASH_ENV
