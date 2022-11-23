@@ -28,7 +28,6 @@
   
     
       - &step_set_environment
-          description: Setup AWS auth using OIDC token
           parameters:
             aws-role-arn:
               type: string
