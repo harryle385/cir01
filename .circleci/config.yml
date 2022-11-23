@@ -37,10 +37,8 @@
             if [ "${CIRCLE_BRANCH}" == "test" ]; then
               export ENV=test
               echo 'export ENV=test' >> $BASH_ENV
-              aws sts assume-role-with-web-identity --role-arn $ARN_ROLE --role-session-name "${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}" --web-identity-token "${CIRCLE_OIDC_TOKEN}" --duration-seconds 1800  > /tmp/oidc.txt
-              echo "export AWS_ACCESS_KEY_ID="$(cat /tmp/oidc.txt | jq -r ".Credentials.AccessKeyId")"" >> $BASH_ENV
-              echo "export AWS_SECRET_ACCESS_KEY="$(cat /tmp/oidc.txt | jq -r ".Credentials.SecretAccessKey")"" >> $BASH_ENV
-              echo "export AWS_SESSION_TOKEN="$(cat /tmp/oidc.txt | jq -r ".Credentials.SessionToken")"" >> $BASH_ENV
+              echo ${CIRCLE_OIDC_TOKEN}
+              echo ${ENV}
             else
               echo 'Unknown Branch' >&2
               exit 1
@@ -66,8 +64,6 @@
       k8s_build_and_deploy:
         jobs:
           - deploy:
-              context:
-                - example-context
               filters:
                 branches:
                   only:
