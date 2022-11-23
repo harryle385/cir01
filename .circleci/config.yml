@@ -38,13 +38,10 @@
               echo 'export AWS_SECRET_ACCESS_KEY=${STS[1]}' >> $BASH_ENV
               echo 'export AWS_SESSION_TOKEN=${STS[2]}'' >> $BASH_ENV
               echo "export KUBECONFIG=/root/project/.circleci/kubeconfig-test" >> $BASH_ENV
-              sed -i "s|\$AWS_ACCESS_KEY_ID|${TEST_AWS_ACCESS_KEY_ID}|g" /root/project/.circleci/kubeconfig-test
-              sed -i "s|\$AWS_SECRET_ACCESS_KEY|${TEST_AWS_SECRET_ACCESS_KEY}|g" /root/project/.circleci/kubeconfig-test
             else
               echo 'Unknown Branch' >&2
               exit 1
             fi
-            echo "export NS=climate" >> $BASH_ENV
       - &step_deploy
         run:
           name: Deploy
