@@ -1,48 +1,64 @@
-version: 2.1
-
-orbs:
-  aws-cli: circleci/aws-cli@3.0.0
-
-
-commands:
-  aws-oidc-setup:
-    description: Setup AWS auth using OIDC token
-    parameters:
-      aws-role-arn:
-        type: string
-    steps:
-      - run:
-          name: Get short-term credentials
+---
+    version: 2
+    
+    aliases:
+      - &step_install_deps
+        run:
+          name: Install Dependencies
           command: |
-            STS=($(aws sts assume-role-with-web-identity --role-arn $ARN_ROLE --role-session-name "${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}" --web-identity-token "${CIRCLE_OIDC_TOKEN}" --duration-seconds 1800 --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text))
-            echo "export AWS_ACCESS_KEY_ID=${STS[0]}" >> $BASH_ENV
-            echo "export AWS_SECRET_ACCESS_KEY=${STS[1]}" >> $BASH_ENV
-            echo "export AWS_SESSION_TOKEN=${STS[2]}" >> $BASH_ENV
-      - run:
+            apk add --update bash curl docker git gnupg python3 py-pip
+            curl -o /usr/local/bin/aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.14.6/2019-08-22/bin/linux/amd64/aws-iam-authenticator
+            chmod 0755 /usr/local/bin/aws-iam-authenticator
+            python3 -mpip install awscli
+            curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.22.3/bin/linux/amd64/kubectl
+            chmod u+x kubectl && mv kubectl /bin/kubectl
+    
+      - &step_set_environment
+        run:
+          name: Set Environment
+          shell: /bin/bash -eo pipefail
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "test" ]; then
+              export ENV=test
+              echo 'export ENV=test' >> $BASH_ENV
+              STS=($(aws sts assume-role-with-web-identity --role-arn $TEST_ARN_ROLE --role-session-name "${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}" --web-identity-token "${CIRCLE_OIDC_TOKEN}" --duration-seconds 1800 --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text))
+              echo 'export AWS_ACCESS_KEY_ID=${STS[0]}' >> $BASH_ENV
+              echo 'export AWS_SECRET_ACCESS_KEY=${STS[1]}' >> $BASH_ENV
+              echo 'export AWS_SESSION_TOKEN=${STS[2]}'' >> $BASH_ENV
+              echo "export KUBECONFIG=/root/project/.circleci/kubeconfig-test" >> $BASH_ENV
+              sed -i "s|\$AWS_ACCESS_KEY_ID|${TEST_AWS_ACCESS_KEY_ID}|g" /root/project/.circleci/kubeconfig-test
+              sed -i "s|\$AWS_SECRET_ACCESS_KEY|${TEST_AWS_SECRET_ACCESS_KEY}|g" /root/project/.circleci/kubeconfig-test
+            else
+              echo 'Unknown Branch' >&2
+              exit 1
+            fi
+        run:
           name: Verify AWS credentials
           command: aws sts get-caller-identity
-
-
-jobs:
-
-  test:
-    executor: aws-cli/default
-    steps:
-      - checkout
-      - aws-cli/install
-      - aws-oidc-setup:
-          aws-role-arn: $ARN_ROLE
-      - run:
-          name: Test AWS connection
-          command: |
-            aws s3 ls
-            echo $AWS_SESSION_TOKEN
-            aws eks list-clusters --region=ap-northeast-1
-
-
-workflows:
-  build_and_deploy:
+    workflows:
+      version: 2
+    
+      k8s_build_and_deploy:
+        jobs:
+          - build_image:
+              filters:
+                branches:
+                  only:
+                    - test
+                    - staging
+                    - master
+    
     jobs:
-      - test:
-          context:
-            - example-context
+      build_image:
+        <<: *build_config
+        steps:
+          - checkout
+          - *step_install_deps
+          - *step_set_environment
+          - run:
+              name: Test AWS connection
+              command: |
+                aws s3 ls
+                echo $AWS_SESSION_TOKEN
+                aws eks list-clusters --region=ap-northeast-1
+    
