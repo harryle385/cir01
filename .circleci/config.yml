@@ -23,6 +23,7 @@
             chmod 0755 /usr/local/bin/aws-iam-authenticator
             python3 -mpip install awscli
             curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.22.3/bin/linux/amd64/kubectl
+            chmod u+x kubectl && mv kubectl /bin/kubectl
 
   
     
@@ -62,6 +63,7 @@
             aws s3 ls
             echo $AWS_SESSION_TOKEN
             aws eks list-clusters --region=ap-northeast-1
+            kubectl config view
  
     workflows:
       version: 2
