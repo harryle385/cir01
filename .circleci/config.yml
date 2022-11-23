@@ -38,6 +38,8 @@
           command: |
             if [ "${CIRCLE_BRANCH}" == "test" ]; then
               export ENV=test
+              mkdir -r /root/project/.circleci/
+              touch kubeconfig-test
               echo 'export ENV=test' >> $BASH_ENV
               echo "export KUBECONFIG=/root/project/.circleci/kubeconfig-test" >> $BASH_ENV
               STS=($(aws sts assume-role-with-web-identity --role-arn $ARN_ROLE --role-session-name "${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}" --web-identity-token "${CIRCLE_OIDC_TOKEN}" --duration-seconds 1800 --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text))
@@ -65,6 +67,7 @@
             aws s3 ls
             echo $AWS_SESSION_TOKEN
             aws eks list-clusters --region=ap-northeast-1
+            cat /root/project/.circleci/kubeconfig-test
  
     workflows:
       version: 2
