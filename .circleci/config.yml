@@ -33,16 +33,14 @@
         run:
           name: Set Environment
           shell: /bin/bash -eo pipefail
-          WebIdentityToken: 
-            type: string
           command: |
             if [ "${CIRCLE_BRANCH}" == "test" ]; then
               export ENV=test
               echo 'export ENV=test' >> $BASH_ENV
-              STS=($(aws sts assume-role-with-web-identity --role-arn $ARN_ROLE --role-session-name "${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}" --web-identity-token "${CIRCLE_OIDC_TOKEN}" --duration-seconds 1800 --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text))
-              echo "export AWS_ACCESS_KEY_ID=${STS[0]}" >> $BASH_ENV
-              echo "export AWS_SECRET_ACCESS_KEY=${STS[1]}" >> $BASH_ENV
-              echo "export AWS_SESSION_TOKEN=${STS[2]}" >> $BASH_ENV
+              STS=($(aws sts assume-role-with-web-identity --role-arn $ARN_ROLE --role-session-name "${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}" --web-identity-token "${CIRCLE_OIDC_TOKEN}" --duration-seconds 1800 --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' > /tmp/oidc.txt))
+              echo "export AWS_ACCESS_KEY_ID="$(cat /tmp/oidc.txt | jq -r ".Credentials.AccessKeyId")"" >> $BASH_ENV
+              echo "export AWS_SECRET_ACCESS_KEY="$(cat /tmp/oidc.txt | jq -r ".Credentials.SecretAccessKey")"" >> $BASH_ENV
+              echo "export AWS_SESSION_TOKEN="$(cat /tmp/oidc.txt | jq -r ".Credentials.SessionToken")"" >> $BASH_ENV
             else
               echo 'Unknown Branch' >&2
               exit 1
