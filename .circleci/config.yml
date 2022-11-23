@@ -1,6 +1,8 @@
 ---
     version: 2
-    
+    orbs:
+        aws-cli: circleci/aws-cli@3.0.0
+
     aliases:
       - &deploy_config
         docker:
