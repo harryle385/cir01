@@ -50,7 +50,6 @@
     
     jobs:
       build_image:
-        <<: *build_config
         steps:
           - checkout
           - *step_install_deps
