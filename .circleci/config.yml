@@ -6,10 +6,6 @@ orbs:
 
 commands:
   aws-oidc-setup:
-    description: Setup AWS auth using OIDC token
-    parameters:
-      aws-role-arn:
-        type: string
     steps:
       - run:
           name: Get short-term credentials
@@ -30,8 +26,7 @@ jobs:
     steps:
       - checkout
       - aws-cli/install
-      - aws-oidc-setup:
-          aws-role-arn: $ARN_ROLE
+      - aws-oidc-setup
       - run:
           name: Test AWS connection
           command: |
