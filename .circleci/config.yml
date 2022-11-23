@@ -1,7 +1,5 @@
 ---
     version: 2
-    orbs:
-        aws-cli: circleci/aws-cli@3.0.0
 
     aliases:
       - &deploy_config
@@ -18,9 +16,6 @@
       - &step_install_deps
         run:
           name: Install Dependencies
-            # curl -o /usr/local/bin/aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.14.6/2019-08-22/bin/linux/amd64/aws-iam-authenticator
-            # chmod u+x kubectl && mv kubectl /bin/kubectl
-            # chmod 0755 /usr/local/bin/aws-iam-authenticator
           command: |
             apk add --update bash curl docker git gnupg python3 py-pip
             curl -o /usr/local/bin/aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.14.6/2019-08-22/bin/linux/amd64/aws-iam-authenticator
@@ -42,7 +37,7 @@
               touch /root/project/.circleci/kubeconfig-test
               echo 'export ENV=test' >> $BASH_ENV
               echo "export KUBECONFIG=/root/project/.circleci/kubeconfig-test" >> $BASH_ENV
-              STS=($(aws sts assume-role-with-web-identity --role-arn $ARN_ROLE --role-session-name "${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}" --web-identity-token "${CIRCLE_OIDC_TOKEN}" --duration-seconds 1800 --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text))
+              STS=($(aws sts assume-role-with-web-identity --role-arn $TEST_ARN_ROLE --role-session-name "${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}" --web-identity-token "${CIRCLE_OIDC_TOKEN}" --duration-seconds 1800 --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text))
               echo "export AWS_ACCESS_KEY_ID=${STS[0]}" >> $BASH_ENV
               echo "export AWS_SECRET_ACCESS_KEY=${STS[1]}" >> $BASH_ENV
               echo "export AWS_SESSION_TOKEN=${STS[2]}" >> $BASH_ENV
@@ -67,7 +62,6 @@
             aws s3 ls
             echo $AWS_SESSION_TOKEN
             aws eks list-clusters --region=ap-northeast-1
-            cat /root/project/.circleci/kubeconfig-test
  
     workflows:
       version: 2
