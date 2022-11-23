@@ -1,7 +1,18 @@
 ---
     version: 2
     
-    aliases: 
+    aliases:
+      - &deploy_config
+        docker:
+          - image: alpine/helm:3.6.0
+        environment:
+          APP: allinfra
+    
+      - &step_setup_remote_docker
+        setup_remote_docker:
+          version: 19.03.13
+          docker_layer_caching: true
+    
       - &step_install_deps
         run:
           name: Install Dependencies
@@ -12,62 +23,61 @@
             python3 -mpip install awscli
             curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.22.3/bin/linux/amd64/kubectl
             chmod u+x kubectl && mv kubectl /bin/kubectl
-
+  
     
-      # - &step_set_environment
-      #   run:
-      #     name: Set Environment
-      #     shell: /bin/bash -eo pipefail
-      #     command: |
-      #       if [ "${CIRCLE_BRANCH}" == "test" ]; then
-      #         export ENV=test
-      #         echo 'export ENV=test' >> $BASH_ENV
-      #         echo "export KUBECONFIG=/root/project/.circleci/kubeconfig-test" >> $BASH_ENV
-      #         sed -i "s|\$AWS_ACCESS_KEY_ID|${TEST_AWS_ACCESS_KEY_ID}|g" /root/project/.circleci/kubeconfig-test
-      #         sed -i "s|\$AWS_SECRET_ACCESS_KEY|${TEST_AWS_SECRET_ACCESS_KEY}|g" /root/project/.circleci/kubeconfig-test
-      #         echo 'export AWS_ACCESS_KEY_ID=${TEST_AWS_ACCESS_KEY_ID}' >> $BASH_ENV
-      #         echo 'export AWS_SECRET_ACCESS_KEY=${TEST_AWS_SECRET_ACCESS_KEY}' >> $BASH_ENV
-      #       elif [ "${CIRCLE_BRANCH}" == "staging" ]; then
-      #         export ENV=stage
-      #         echo 'export ENV=stage' >> $BASH_ENV
-      #         echo "export KUBECONFIG=/root/project/.circleci/kubeconfig-stage" >> $BASH_ENV
-      #         sed -i "s|\$AWS_ACCESS_KEY_ID|${STAGE_AWS_ACCESS_KEY_ID}|g" /root/project/.circleci/kubeconfig-stage
-      #         sed -i "s|\$AWS_SECRET_ACCESS_KEY|${STAGE_AWS_SECRET_ACCESS_KEY}|g" /root/project/.circleci/kubeconfig-stage
-      #         echo 'export AWS_ACCESS_KEY_ID=${STAGE_AWS_ACCESS_KEY_ID}' >> $BASH_ENV
-      #         echo 'export AWS_SECRET_ACCESS_KEY=${STAGE_AWS_SECRET_ACCESS_KEY}' >> $BASH_ENV
-      #       elif [ "${CIRCLE_BRANCH}" == "master" ]; then
-      #         export ENV=prod
-      #         echo 'export ENV=prod' >> $BASH_ENV
-      #         echo "export KUBECONFIG=/root/project/.circleci/kubeconfig-prod" >> $BASH_ENV
-      #         sed -i "s|\$AWS_ACCESS_KEY_ID|${PROD_AWS_ACCESS_KEY_ID}|g" /root/project/.circleci/kubeconfig-prod
-      #         sed -i "s|\$AWS_SECRET_ACCESS_KEY|${PROD_AWS_SECRET_ACCESS_KEY}|g" /root/project/.circleci/kubeconfig-prod
-      #         echo 'export AWS_ACCESS_KEY_ID=${PROD_AWS_ACCESS_KEY_ID}' >> $BASH_ENV
-      #         echo 'export AWS_SECRET_ACCESS_KEY=${PROD_AWS_SECRET_ACCESS_KEY}' >> $BASH_ENV
-      #       else
-      #         echo 'Unknown Branch' >&2
-      #         exit 1
-      #       fi
-      #       echo "export NS=climate" >> $BASH_ENV
+      - &step_set_environment
+        run:
+          name: Set Environment
+          shell: /bin/bash -eo pipefail
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "test" ]; then
+              export ENV=test
+              echo 'export ENV=test' >> $BASH_ENV
+              STS=($(aws sts assume-role-with-web-identity --role-arn $TEST_ARN_ROLE --role-session-name "${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}" --web-identity-token "${CIRCLE_OIDC_TOKEN}" --duration-seconds 1800 --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text))
+              echo 'export AWS_ACCESS_KEY_ID=${STS[0]}' >> $BASH_ENV
+              echo 'export AWS_SECRET_ACCESS_KEY=${STS[1]}' >> $BASH_ENV
+              echo 'export AWS_SESSION_TOKEN=${STS[2]}'' >> $BASH_ENV
+              echo "export KUBECONFIG=/root/project/.circleci/kubeconfig-test" >> $BASH_ENV
+              sed -i "s|\$AWS_ACCESS_KEY_ID|${TEST_AWS_ACCESS_KEY_ID}|g" /root/project/.circleci/kubeconfig-test
+              sed -i "s|\$AWS_SECRET_ACCESS_KEY|${TEST_AWS_SECRET_ACCESS_KEY}|g" /root/project/.circleci/kubeconfig-test
+            else
+              echo 'Unknown Branch' >&2
+              exit 1
+            fi
+            echo "export NS=climate" >> $BASH_ENV
+        run:
+          name: Verify AWS credentials
+          command: aws sts get-caller-identity
 
+      - &step_deploy
+        run:
+          name: Deploy
+          shell: /bin/bash -eo pipefail
+          command: |
+            aws s3 ls
+            echo $AWS_SESSION_TOKEN
+            aws eks list-clusters --region=ap-northeast-1
+ 
     workflows:
       version: 2
     
       k8s_build_and_deploy:
         jobs:
-          - build_image:
+          - deploy:
               filters:
                 branches:
                   only:
                     - test
                     - staging
                     - master
-    jobs:
-      build_image:
-        <<: *build_config
+    
+    jobs:    
+      deploy:
+        <<: *deploy_config
         steps:
           - checkout
+          - *step_setup_remote_docker
           - *step_install_deps
-          # - *step_set_environment
-
-
+          - *step_set_environment
+          - *step_deploy
     
