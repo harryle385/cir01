@@ -31,9 +31,6 @@
       - &step_set_environment
         run:
           name: Set Environment
-          parameters:
-            aws-role-arn:
-               type: string
           shell: /bin/bash -eo pipefail
           command: |
             if [ "${CIRCLE_BRANCH}" == "test" ]; then
@@ -78,6 +75,5 @@
           - *step_setup_remote_docker
           - *step_install_deps
           - *step_set_environment:
-            aws-role-arn: $TEST_ARN_ROLE
           - *step_deploy
     
