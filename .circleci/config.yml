@@ -28,9 +28,6 @@
   
     
       - &step_set_environment
-          parameters:
-            aws-role-arn:
-              type: string
           steps:
             - run:
               name: Set Environment
@@ -79,7 +76,6 @@
           - checkout
           - *step_setup_remote_docker
           - *step_install_deps
-          - *step_set_environment:
-              aws-role-arn: $TEST_ARN_ROLE
+          - *step_set_environment
           - *step_deploy
     
