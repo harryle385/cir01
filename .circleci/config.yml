@@ -45,15 +45,12 @@
               exit 1
             fi
             echo "export NS=climate" >> $BASH_ENV
-        run:
-          name: Verify AWS credentials
-          command: aws sts get-caller-identity
-
       - &step_deploy
         run:
           name: Deploy
           shell: /bin/bash -eo pipefail
           command: |
+            aws sts get-caller-identity
             aws s3 ls
             echo $AWS_SESSION_TOKEN
             aws eks list-clusters --region=ap-northeast-1
