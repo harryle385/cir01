@@ -28,25 +28,24 @@
   
     
       - &step_set_environment
-          steps:
-            - run:
-              name: Set Environment
-              shell: /bin/bash -eo pipefail
-              command: |
-                if [ "${CIRCLE_BRANCH}" == "test" ]; then
-                  export ENV=test
-                  echo 'export ENV=test' >> $BASH_ENV
-                  STS=($(aws sts assume-role-with-web-identity --role-arn $TEST_ARN_ROLE --role-session-name "${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}" --web-identity-token "${CIRCLE_OIDC_TOKEN}" --duration-seconds 1800 --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text))
-                  echo 'export AWS_ACCESS_KEY_ID=${STS[0]}' >> $BASH_ENV
-                  echo 'export AWS_SECRET_ACCESS_KEY=${STS[1]}' >> $BASH_ENV
-                  echo 'export AWS_SESSION_TOKEN=${STS[2]}' >> $BASH_ENV
-                else
-                  echo 'Unknown Branch' >&2
-                  exit 1
-                fi
-            - run: 
-                name: Verify AWS credentials
-                command: aws sts get-caller-identity
+        - run:
+          name: Set Environment
+          shell: /bin/bash -eo pipefail
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "test" ]; then
+              export ENV=test
+              echo 'export ENV=test' >> $BASH_ENV
+              STS=($(aws sts assume-role-with-web-identity --role-arn $TEST_ARN_ROLE --role-session-name "${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}" --web-identity-token "${CIRCLE_OIDC_TOKEN}" --duration-seconds 1800 --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text))
+              echo 'export AWS_ACCESS_KEY_ID=${STS[0]}' >> $BASH_ENV
+              echo 'export AWS_SECRET_ACCESS_KEY=${STS[1]}' >> $BASH_ENV
+              echo 'export AWS_SESSION_TOKEN=${STS[2]}' >> $BASH_ENV
+            else
+              echo 'Unknown Branch' >&2
+              exit 1
+            fi
+        - run: 
+            name: Verify AWS credentials
+            command: aws sts get-caller-identity
       - &step_deploy
         run:
           name: Deploy
