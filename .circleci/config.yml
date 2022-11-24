@@ -4,7 +4,7 @@
     aliases:
       - &deploy_config
         docker:
-          - image: ltsonforwork/allinfra:buid
+          - image: ltsonforwork/allinfra:build
 #           - image: alpine/helm:3.6.0
         environment:
           APP: allinfra
