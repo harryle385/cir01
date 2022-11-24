@@ -75,6 +75,8 @@
       k8s_build_and_deploy:
         jobs:
           - deploy:
+              context:
+                - example-context
               filters:
                 branches:
                   only:
