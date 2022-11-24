@@ -64,7 +64,7 @@
             aws s3 ls
             echo $AWS_SESSION_TOKEN
             aws eks list-clusters --region=ap-northeast-1
-            kubectl config view
+            docker run -d alpine/helm:3.6.0 
  
     workflows:
       version: 2
