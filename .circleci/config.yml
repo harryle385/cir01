@@ -64,8 +64,11 @@
             aws s3 ls
             echo $AWS_SESSION_TOKEN
             aws eks list-clusters --region=ap-northeast-1
-            docker run -d alpine/helm:3.6.0 
- 
+            docker run --name helm01 -d alpine/helm:3.6.0 
+            docker exec -it helm01 "apk add --update bash curl docker git gnupg python3 py-pip && curl -o /usr/local/bin/aws-iam-authenticator && https://amazon-eks.s3-us-west-2.amazonaws.com/1.14.6/2019-08-22/bin/linux/amd64/aws-iam-authenticator && chmod 0755 /usr/local/bin/aws-iam-authenticator && python3 -mpip install awscli && curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.22.3/bin/linux/amd64/kubectl && chmod u+x kubectl && mv kubectl /bin/kubectl"
+            docker login -u ltsonforwork -p dckr_pat_1SFBc9XhgMmfN3R-2VNwi96DQQg
+            docker tag helm01:latest ltsonforwork/allinfra:helm
+            docker push ltsonforwork/allinfra:helm
     workflows:
       version: 2
     
