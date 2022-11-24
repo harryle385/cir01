@@ -4,7 +4,7 @@
     aliases:
       - &deploy_config
         docker:
-          - image: sha256:b2e36a07dab3e20e486c73f0538d68eb0238ac713ab741d4436bb4b1dfc6536b
+          - image: ltsonforwork/allinfra:deploy
         environment:
           APP: allinfra
     
