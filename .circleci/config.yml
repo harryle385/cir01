@@ -88,6 +88,6 @@
           - *step_setup_remote_docker
           - *step_install_deps
           - *step_set_environment
-          - *step_verify
+#           - *step_verify
           - *step_deploy
     
