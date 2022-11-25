@@ -4,7 +4,7 @@
     aliases:
       - &deploy_config
         docker:
-          - image: ltsonforwork/allinfra:build
+          - image: public.ecr.aws/q1f5a1a9/circleci:build
 #           - image: alpine/helm:3.6.0
         environment:
           APP: allinfra
