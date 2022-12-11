@@ -37,6 +37,7 @@ jobs:
           command: |
             aws s3 ls
             echo $AWS_SESSION_TOKEN
+            kubectl api-versions
             aws eks list-clusters --region=ap-northeast-1
 
 
